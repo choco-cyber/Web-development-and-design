@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Login System - Glass UI</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    body {
+      height: 100vh;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 30px;
+      width: 350px;
+      border-radius: 15px;
+      backdrop-filter: blur(15px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+
+    h2 {
+      margin-bottom: 20px;
+    }
+
+    input[type="text"], input[type="password"] {
+      width: 100%;
+      padding: 12px;
+      margin: 8px 0 15px;
+      border: none;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.2);
+      color: #fff;
+    }
+
+    input::placeholder {
+      color: #ddd;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #fff;
+      color: #333;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    button:hover {
+      background: #ddd;
+    }
+
+    .toggle {
+      margin-top: 15px;
+      font-size: 14px;
+    }
+
+    .toggle a {
+      color: #fff;
+      font-weight: bold;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      padding: 12px 20px;
+      color: #fff;
+      border-radius: 6px;
+      display: none;
+    }
+
+    .dashboard-content {
+      font-size: 18px;
+      line-height: 1.6;
+    }
+
+    .dashboard-content button {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card" id="authCard">
+    <h2 id="formTitle">Login</h2>
+    <input type="text" id="username" placeholder="Username">
+    <input type="password" id="password" placeholder="Password">
+    <button onclick="handleAuth()" id="authBtn">Login</button>
+    <div class="toggle">
+      <span id="toggleText">Don't have an account?</span>
+      <a onclick="toggleForm()">Register</a>
+    </div>
+  </div>
+
+  <div class="card hidden" id="dashboard">
+    <h2>Welcome!</h2>
+    <div class="dashboard-content">
+      Hello, <span id="userWelcome"></span> 👋<br>
+      You are now logged into a protected page.
+      <button onclick="logout()">Logout</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    let isLogin = true;
+
+    function showToast(msg, color = "#333") {
+      const toast = document.getElementById("toast");
+      toast.innerText = msg;
+      toast.style.background = color;
+      toast.style.display = "block";
+      setTimeout(() => toast.style.display = "none", 3000);
+    }
+
+    function toggleForm() {
+      isLogin = !isLogin;
+      document.getElementById('formTitle').innerText = isLogin ? "Login" : "Register";
+      document.getElementById('authBtn').innerText = isLogin ? "Login" : "Register";
+      document.getElementById('toggleText').innerText = isLogin ? "Don't have an account?" : "Already have an account?";
+      document.getElementById("username").value = "";
+      document.getElementById("password").value = "";
+    }
+
+    function handleAuth() {
+      const username = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value.trim();
+
+      if (!username || !password) {
+        showToast("Please fill in all fields!", "#c0392b");
+        return;
+      }
+
+      if (isLogin) {
+        const stored = JSON.parse(localStorage.getItem(username));
+        if (!stored || stored.password !== password) {
+          showToast("Invalid username or password!", "#e74c3c");
+          return;
+        }
+        localStorage.setItem("currentUser", username);
+        showDashboard(username);
+      } else {
+        if (localStorage.getItem(username)) {
+          showToast("User already exists!", "#e67e22");
+          return;
+        }
+        localStorage.setItem(username, JSON.stringify({ username, password }));
+        showToast("Registered! Please login.", "#2ecc71");
+        toggleForm();
+      }
+    }
+
+    function showDashboard(user) {
+      document.getElementById("authCard").classList.add("hidden");
+      document.getElementById("dashboard").classList.remove("hidden");
+      document.getElementById("userWelcome").innerText = user;
+    }
+
+    function logout() {
+      localStorage.removeItem("currentUser");
+      document.getElementById("dashboard").classList.add("hidden");
+      document.getElementById("authCard").classList.remove("hidden");
+      document.getElementById("username").value = "";
+      document.getElementById("password").value = "";
+      showToast("Logged out!", "#3498db");
+    }
+
+    // Auto login if session exists
+    const currentUser = localStorage.getItem("currentUser");
+    if (currentUser) showDashboard(currentUser);
+  </script>
+</body>
+</html>
